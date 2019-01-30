@@ -30,7 +30,7 @@ for dp,dn,fn in os.walk(tr):
 
 ## Second, index tests
 for t in tests:
-	idxfn=os.path.join(t,'tr.idx')
+	idxfn=os.path.join(t,'.tr.idx')
 	with open(idxfn, 'w') as out:
 		print 'Generating', idxfn
 		for dp,dn,fn in os.walk(t):

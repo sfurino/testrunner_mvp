@@ -1,5 +1,5 @@
 # testrunner specific
-tr.idx
+.tr.idx
 
 # Byte-compiled / optimized / DLL files
 __pycache__/
