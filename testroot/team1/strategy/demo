@@ -1,0 +1,9 @@
+# This is a strategy file
+
+#TODO 
+#include 
+
+# Run these tests
+team1/pwtest
+team1/securitytest
+team2/pytest
