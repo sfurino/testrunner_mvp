@@ -4,6 +4,6 @@
 #include 
 
 # Run these tests
-team1/pwtest
-team1/securitytest
-team2/pytest
+test team1/pwtest
+test team1/securitytest
+test team2/pytest
