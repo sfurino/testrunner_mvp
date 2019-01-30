@@ -32,7 +32,7 @@ for dp,dn,fn in os.walk(tr):
 for t in tests:
 	idxfn=os.path.join(t,'tr.idx')
 	with open(idxfn, 'w') as out:
-		print idxfn
+		print 'Generating', idxfn
 		for dp,dn,fn in os.walk(t):
 			ldn=dp.replace(t,'').strip(os.path.sep)
 			for name in dn:
@@ -44,4 +44,11 @@ for t in tests:
 				mode=str(oct(os.stat(rfn).st_mode & 0o777))
 				out.write(idxf.format("FILE",os.path.join(ldn,name), mode))
 
-##
+
+
+## Serve
+os.chdir(tr)
+H=SimpleHTTPServer.SimpleHTTPRequestHandler
+httpd=SocketServer.TCPServer(('',PORT), H)
+print "Starting webserver"
+httpd.serve_forever()
