@@ -15,7 +15,7 @@ import SocketServer
 
 
 PORT=8400
-tr='testroot'
+tr='demo-testroot'
 
 idxf='{}|{}|{}\n'
 
