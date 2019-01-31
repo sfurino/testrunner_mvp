@@ -221,10 +221,10 @@ for pri, test, args in slist:
 	dprint(2, msg)
 	FH.write(msg)
 	#TODO print stdout stderr
-	
 
 FH.close()
 
-
+#TODO submit results to trserver
+#TODO clean up tmpdir
 
 
