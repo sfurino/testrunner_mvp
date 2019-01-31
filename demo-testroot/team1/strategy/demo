@@ -9,8 +9,11 @@ test team1/securitytest
 # This is from another team.
 strategy team2/demo2
 
-
+# This test is written in (system) python
 test team2/pytest
+
+# This test is more than one file
+test team1/payloadtest
 
 
 # Tests can also specify priority.  Default is 50
