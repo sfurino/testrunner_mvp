@@ -1,9 +1,20 @@
 # This is a strategy file
 
-#TODO 
-#include 
-
 # Run these tests
 test team1/pwtest
 test team1/securitytest
+
+
+# Can include another strategy file.
+# This is from another team.
+strategy team2/demo2
+
+
 test team2/pytest
+
+
+# Tests can also specify priority.  Default is 50
+# They also can take arguments.
+test pri=20 team2/sleep 10
+
+

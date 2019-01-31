@@ -1,0 +1,8 @@
+#
+#
+#  Example of including strategy
+#
+#
+
+test team2/echo this is from demo2
+include team2/demo3
