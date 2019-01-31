@@ -1,0 +1,122 @@
+#!/usr/bin/python
+
+
+# Testrunner
+
+# Goal is to be implemented in a single file - /usr/bin/testrunner - *not*
+# a ton of site-packaged files, configuration files, and UI.
+
+# Additional goal is to require minimal dependencies - this has been tested
+# against system python from a 'minimal install' of rhel7
+# Thus python3 and requests aren't available.  Le sigh.
+
+import pycurl
+from StringIO import StringIO
+import os
+
+
+#temp for testing.  get from args
+VERBOSITY=4
+
+
+################
+#CONFIG
+trserver='http://localhost:8400'
+################
+
+
+
+################
+def dprint(v, *s):
+	if v >= VERBOSITY:
+		print '##debug'+str(v), s
+	
+
+
+def geturl_s(url):
+	"""Retrieve URL, return contents as list of lines"""
+	b=StringIO()
+	c=pycurl.Curl()
+	c.setopt(c.URL, url)
+	c.setopt(c.WRITEFUNCTION, b.write)
+	c.perform()
+	rc=c.getinfo(c.RESPONSE_CODE)
+	c.close()
+	dprint(4, 'geturl_s', url, 'response', rc)
+	if rc in [200]:
+		return b.getvalue().split('\n')
+	else:
+		return False
+
+
+
+def getstrategy(stname, visited=None, retval=None):
+	"""Get a strategy.
+	Takes a strategy name (<owner>/<strategy>), retrieves it
+	from the trserver.  
+	Returns a list of tuples (pri, test, args)
+	"""
+	dprint(4, 'getstrategy', stname, visited, retval)
+	if visited is None:
+		visited=[]
+	if retval is None:
+		retval=[]
+	if stname in visited:
+		dprint(0,'loop detected', stname, visited)
+		# resilient but dangerous; keeps going
+		return retval
+	visited.append(stname)
+		
+	sto, sts = stname.split('/')
+	surl=os.path.join(trserver,sto,'strategy',sts)
+	outp=geturl_s(surl)
+	if not outp:
+		dprint(0,'failed strategy', stname)
+		# resilient but dangerous; keeps going
+		return retval
+	for rawline in outp:
+		ln=rawline.strip()
+		if ln.startswith('#') or not ln:
+			continue
+		cmdln=ln.split()
+		cmd=cmdln.pop(0)
+		if cmd == 'test':
+			pri=50
+			if cmdln[0].startswith('pri='):
+				pric=cmdln.pop(0)
+				pri=int(pric.split('=')[1])
+			test=cmdln.pop(0)
+			retval.append((pri, test, cmdln))
+			dprint(4, 'added', pri, test, cmdln)
+		elif cmd == 'include' or cmd == 'strategy':
+			dprint(4, 'including strategy', cmdln)
+			retval=getstrategy(cmdln.pop(0), visited, retval)
+		else:
+			dprint(0, 'error unknown cmd', cmd)
+
+	return retval
+			
+
+def tests_in(strategy):
+	"""Return a list of tests from a strategy list"""
+	retval=set()
+	for pri, test, args in strategy:
+		retval.add(test)
+	return list(retval)
+	
+################
+
+# arg parsing here
+# the positional args are all strategy names
+# the only options should be:
+# . changing trserver from default
+# . dry-run (don't run tests)
+# . drier-run (don't even dl tests)
+# . changing result submit location / method
+# . a oneshot "just run one test" mode
+
+
+slist=getstrategy('team1/demo')
+for t in slist:
+	print t
+
