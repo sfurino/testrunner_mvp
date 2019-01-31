@@ -211,8 +211,8 @@ for pri, test, args in slist:
 	dprint(2, msg)
 	FH.write(msg)
 	res, stdo, stde = run_test(tmpdir, test, args)
+	msg='#TR#{} {} {}\n'.format(now, 'RES:'+str(res), (test, args))
 	dprint(2, msg)
-	msg='#TR#{} {} {}\n'.format(now, 'RES :'+str(res), (test, args))
 	FH.write(msg)
 	#TODO print stdout stderr
 	
