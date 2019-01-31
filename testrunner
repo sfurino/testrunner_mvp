@@ -16,6 +16,7 @@ import os
 import tempfile
 import uuid
 import time
+import subprocess
 
 #temp for testing.  get from args
 VERBOSITY=2
@@ -171,11 +172,15 @@ def run_test(rd, test, args):
 	if not execf:
 		dprint(0, 'no exec', test)
 		return None, None, None
-	dprint(2, 'run_test_exec', execdir, execf)
-
-
+	pocmd=[]
+	pocmd.append(os.path.join('.',execf))
+	pocmd.extend(args)
+	dprint(2, 'run_test_exec', execdir, pocmd)
+	proc=subprocess.Popen(pocmd, stderr=subprocess.PIPE, stdout=subprocess.PIPE)
+	(out,err)=proc.communicate()
+	ret=proc.returncode
 	os.chdir(backto)
-	return 1,1,1
+	return ret, out, err
 ################
 
 # TODO arg parsing here
@@ -211,6 +216,7 @@ for pri, test, args in slist:
 	dprint(2, msg)
 	FH.write(msg)
 	res, stdo, stde = run_test(tmpdir, test, args)
+	now=int(time.mktime(time.gmtime()))
 	msg='#TR#{} {} {}\n'.format(now, 'RES:'+str(res), (test, args))
 	dprint(2, msg)
 	FH.write(msg)
