@@ -17,6 +17,8 @@ import SocketServer
 PORT=8400
 tr='demo-testroot'
 
+idxn='.tr.idx'
+
 idxf='{}|{}|{}\n'
 
 # Create tr.idx files for each test
@@ -30,7 +32,7 @@ for dp,dn,fn in os.walk(tr):
 
 ## Second, index tests
 for t in tests:
-	idxfn=os.path.join(t,'.tr.idx')
+	idxfn=os.path.join(t,idxn)
 	with open(idxfn, 'w') as out:
 		print 'Generating', idxfn
 		for dp,dn,fn in os.walk(t):
@@ -40,6 +42,8 @@ for t in tests:
 				mode=str(oct(os.stat(rfn).st_mode & 0o777))
 				out.write(idxf.format("DIR",os.path.join(ldn,name), mode))
 			for name in fn:
+				if name == idxf:
+					continue
 				rfn=os.path.join(dp,name)
 				mode=str(oct(os.stat(rfn).st_mode & 0o777))
 				out.write(idxf.format("FILE",os.path.join(ldn,name), mode))
