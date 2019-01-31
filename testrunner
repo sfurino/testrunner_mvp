@@ -13,6 +13,7 @@
 import pycurl
 from StringIO import StringIO
 import os
+import tempfile
 
 
 #temp for testing.  get from args
@@ -29,8 +30,19 @@ trserver='http://localhost:8400'
 ################
 def dprint(v, *s):
 	if v >= VERBOSITY:
-		print '##debug'+str(v), s
+		print '##'+str(v), s
 	
+
+def geturl_f(url, outf):
+	"""Retrieve URL and store to file"""
+	with open(outf, 'wb') as f:
+		c=pycurl.Curl()
+		c.setopt(c.URL, url)
+		c.setopt(c.WRITEDATA, f)
+		c.perform()
+		rc=c.getinfo(c.RESPONSE_CODE)
+		c.close()
+		dprint(4, 'geturl_f', url, 'response', rc)
 
 
 def geturl_s(url):
@@ -103,6 +115,36 @@ def tests_in(strategy):
 	for pri, test, args in strategy:
 		retval.add(test)
 	return list(retval)
+
+def get_test(rootdir, tname):
+	"""get a test payload into rootdir"""
+	to, ts=tname.split('/')
+	tbaseurl=os.path.join(trserver,to,'tests',ts)
+	tidxurl=os.path.join(tbaseurl,'.tr.idx')
+	tlocaldr=os.path.join(rootdir,to,ts)
+	outp=geturl_s(tidxurl)
+	if not outp:
+		dprint(0, 'failed get test', tname)
+		return False
+	os.makedirs(tlocaldr, 0700)
+	for rawline in outp:
+		#TODO - have geturl_s do the repeated strips
+		ln=rawline.strip()
+		if ln.startswith('#') or not ln:
+			continue
+		itype,name,mode = ln.split('|')
+		if itype == "DIR":
+			dstd=os.path.join(tlocaldr,name)
+			dprint(4,'get_test mkdir', dstd, mode)
+			intmode=int(mode, 8)
+			os.mkdir(dstd, intmode)
+		elif itype == "FILE":
+			srcu=os.path.join(tbaseurl,name)
+			dstf=os.path.join(tlocaldr,name)
+			dprint(4,'get_test retrieve', srcu, dstf, mode)
+			geturl_f(srcu, dstf)
+			#chmod
+			
 	
 ################
 
@@ -117,6 +159,13 @@ def tests_in(strategy):
 
 
 slist=getstrategy('team1/demo')
-for t in slist:
-	print t
+
+# This should sort by pri but preserve order otherwise
+slist.sort(key=lambda tup: tup[0])
+
+tmpdir=tempfile.mkdtemp(prefix='testrunner-')
+dprint(1,'running in',tmpdir)
+
+for test in tests_in(slist):
+	get_test(tmpdir, test)
 
