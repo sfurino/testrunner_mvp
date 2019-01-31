@@ -42,7 +42,7 @@ for t in tests:
 				mode=str(oct(os.stat(rfn).st_mode & 0o777))
 				out.write(idxf.format("DIR",os.path.join(ldn,name), mode))
 			for name in fn:
-				if name == idxf:
+				if name == idxn:
 					continue
 				rfn=os.path.join(dp,name)
 				mode=str(oct(os.stat(rfn).st_mode & 0o777))
