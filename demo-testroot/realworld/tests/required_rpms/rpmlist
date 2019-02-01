@@ -1,0 +1,19 @@
+# LOL.
+kernel
+
+# Some things that should be there
+realmd
+sssld
+adcli
+krb5-workstation
+krb5-libs
+autofs
+sudo
+openldap
+openldap-clients
+oddjob
+oddjob-mkhomedir
+expect
+ldb-tools
+samba-common-tools
+rsyslog
