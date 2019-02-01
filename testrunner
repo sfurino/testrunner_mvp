@@ -19,168 +19,169 @@ import time
 import subprocess
 
 #temp for testing.  get from args
-VERBOSITY=2
+VERBOSITY = 2
 
 
 ################
 #CONFIG
-trserver='http://localhost:8400'
+trserver = 'http://localhost:8400'
+################
+
 ################
 
 
-
-################
 def dprint(v, *s):
-	if v <= VERBOSITY:
-		pfx='#debug'+str(v)
-		for i in xrange(v):
-			pfx+='#'
-		print pfx, s
-	
+    if v <= VERBOSITY:
+        pfx = '#debug'+str(v)
+        for i in xrange(v):
+            pfx += '#'
+        print pfx, s
+
 
 def geturl_f(url, outf):
-	"""Retrieve URL and store to file"""
-	with open(outf, 'wb') as f:
-		c=pycurl.Curl()
-		c.setopt(c.URL, url)
-		c.setopt(c.WRITEDATA, f)
-		c.perform()
-		rc=c.getinfo(c.RESPONSE_CODE)
-		c.close()
-	dprint(4, 'geturl_f', url, 'response', rc)
-	if rc in [200]:
-		return True
-	else:
-		return False
+    """Retrieve URL and store to file"""
+    with open(outf, 'wb') as f:
+        c = pycurl.Curl()
+        c.setopt(c.URL, url)
+        c.setopt(c.WRITEDATA, f)
+        c.perform()
+        rc = c.getinfo(c.RESPONSE_CODE)
+        c.close()
+    dprint(4, 'geturl_f', url, 'response', rc)
+    if rc in [200]:
+        return True
+    else:
+        return False
 
 
 def geturl_s(url):
-	"""Retrieve URL, return contents as list of lines"""
-	b=StringIO()
-	c=pycurl.Curl()
-	c.setopt(c.URL, url)
-	c.setopt(c.WRITEFUNCTION, b.write)
-	c.perform()
-	rc=c.getinfo(c.RESPONSE_CODE)
-	c.close()
-	dprint(4, 'geturl_s', url, 'response', rc)
-	if rc in [200]:
-		return b.getvalue().split('\n')
-	else:
-		return False
-
+    """Retrieve URL, return contents as list of lines"""
+    b = StringIO()
+    c = pycurl.Curl()
+    c.setopt(c.URL, url)
+    c.setopt(c.WRITEFUNCTION, b.write)
+    c.perform()
+    rc = c.getinfo(c.RESPONSE_CODE)
+    c.close()
+    dprint(4, 'geturl_s', url, 'response', rc)
+    if rc in [200]:
+        return b.getvalue().split('\n')
+    else:
+        return False
 
 
 def getstrategy(stname, visited=None, retval=None):
-	"""Get a strategy.
-	Takes a strategy name (<owner>/<strategy>), retrieves it
-	from the trserver.  
-	Returns a list of tuples (pri, test, args)
-	"""
-	dprint(2, 'getstrategy', stname)
-	dprint(3, 'getstrategy', stname, visited, retval)
-	if visited is None:
-		visited=[]
-	if retval is None:
-		retval=[]
-	if stname in visited:
-		dprint(0,'loop detected', stname, visited)
-		# resilient but dangerous; keeps going
-		return retval
-	visited.append(stname)
-		
-	sto, sts = stname.split('/')
-	surl=os.path.join(trserver,sto,'strategy',sts)
-	outp=geturl_s(surl)
-	if not outp:
-		dprint(0,'failed strategy', stname)
-		# resilient but dangerous; keeps going
-		return retval
-	for rawline in outp:
-		ln=rawline.strip()
-		if ln.startswith('#') or not ln:
-			continue
-		cmdln=ln.split()
-		cmd=cmdln.pop(0)
-		if cmd == 'test':
-			pri=50
-			if cmdln[0].startswith('pri='):
-				pric=cmdln.pop(0)
-				pri=int(pric.split('=')[1])
-			test=cmdln.pop(0)
-			retval.append((pri, test, cmdln))
-			dprint(3, 'added test', pri, test, cmdln)
-		elif cmd == 'include' or cmd == 'strategy':
-			dprint(3, 'including strategy', cmdln)
-			retval=getstrategy(cmdln.pop(0), visited, retval)
-		else:
-			dprint(0, 'error unknown cmd', cmd)
+    """Get a strategy.
+    Takes a strategy name (<owner>/<strategy>), retrieves it
+    from the trserver.
+    Returns a list of tuples (pri, test, args)
+    """
+    dprint(2, 'getstrategy', stname)
+    dprint(3, 'getstrategy', stname, visited, retval)
+    if visited is None:
+        visited = []
+    if retval is None:
+        retval = []
+    if stname in visited:
+        dprint(0, 'loop detected', stname, visited)
+        # resilient but dangerous; keeps going
+        return retval
+    visited.append(stname)
 
-	return retval
-			
+    sto, sts = stname.split('/')
+    surl = os.path.join(trserver, sto, 'strategy', sts)
+    outp = geturl_s(surl)
+    if not outp:
+        dprint(0, 'failed strategy', stname)
+        # resilient but dangerous; keeps going
+        return retval
+    for rawline in outp:
+        ln = rawline.strip()
+        if ln.startswith('#') or not ln:
+            continue
+        cmdln = ln.split()
+        cmd = cmdln.pop(0)
+        if cmd == 'test':
+            pri = 50
+            if cmdln[0].startswith('pri='):
+                pric = cmdln.pop(0)
+                pri = int(pric.split('=')[1])
+            test = cmdln.pop(0)
+            retval.append((pri, test, cmdln))
+            dprint(3,  'added test',  pri, test, cmdln)
+        elif cmd == 'include' or cmd == 'strategy':
+            dprint(3,  'including strategy', cmdln)
+            retval = getstrategy(cmdln.pop(0), visited, retval)
+        else:
+            dprint(0,  'error unknown cmd', cmd)
+
+    return retval
+
 
 def tests_in(strategy):
-	"""Return a list of tests from a strategy list"""
-	retval=set()
-	for pri, test, args in strategy:
-		retval.add(test)
-	return list(retval)
+    """Return a list of tests from a strategy list"""
+    retval = set()
+    for pri, test, args in strategy:
+        retval.add(test)
+    return list(retval)
+
 
 def get_test(rootdir, tname):
-	"""get a test payload into rootdir"""
-	to, ts=tname.split('/')
-	dprint(2, 'get test', tname)
-	tbaseurl=os.path.join(trserver,to,'tests',ts)
-	tidxurl=os.path.join(tbaseurl,'.tr.idx')
-	tlocaldr=os.path.join(rootdir,to,ts)
-	outp=geturl_s(tidxurl)
-	if not outp:
-		dprint(0, 'failed get test', tname)
-		return False
-	os.makedirs(tlocaldr, 0700)
-	for rawline in outp:
-		#TODO - have geturl_s do the repeated strips
-		ln=rawline.strip()
-		if ln.startswith('#') or not ln:
-			continue
-		itype,name,mode = ln.split('|')
-		if itype == "DIR":
-			dstd=os.path.join(tlocaldr,name)
-			dprint(3,'get_test mkdir', dstd, mode)
-			intmode=int(mode, 8)
-			os.mkdir(dstd, intmode)
-		elif itype == "FILE":
-			srcu=os.path.join(tbaseurl,name)
-			dstf=os.path.join(tlocaldr,name)
-			intmode=int(mode,8)
-			dprint(3,'get_test retrieve', srcu, dstf, mode)
-			if geturl_f(srcu, dstf):
-				os.chmod(dstf,intmode)
-			
-	
+    """get a test payload into rootdir"""
+    to, ts = tname.split('/')
+    dprint(2, 'get test', tname)
+    tbaseurl = os.path.join(trserver, to, 'tests', ts)
+    tidxurl = os.path.join(tbaseurl, '.tr.idx')
+    tlocaldr = os.path.join(rootdir, to, ts)
+    outp = geturl_s(tidxurl)
+    if not outp:
+        dprint(0,  'failed get test', tname)
+        return False
+    os.makedirs(tlocaldr,  0700)
+    for rawline in outp:
+        #TODO - have geturl_s do the repeated strips
+        ln = rawline.strip()
+        if ln.startswith('#') or not ln:
+            continue
+        itype, name, mode = ln.split('|')
+        if itype == "DIR":
+            dstd = os.path.join(tlocaldr, name)
+            dprint(3, 'get_test mkdir', dstd, mode)
+            intmode = int(mode, 8)
+            os.mkdir(dstd, intmode)
+        elif itype == "FILE":
+            srcu = os.path.join(tbaseurl, name)
+            dstf = os.path.join(tlocaldr, name)
+            intmode = int(mode, 8)
+            dprint(3, 'get_test retrieve', srcu, dstf, mode)
+            if geturl_f(srcu, dstf):
+                os.chmod(dstf, intmode)
+
+
 def run_test(rd, test, args):
-	"""Run a test at rd/test"""
-	execdir=os.path.join(rd,test)
-	backto=os.getcwd()
-	os.chdir(execdir)
-	execf=None
-	for f in os.listdir(execdir):
-		fn, fx=os.path.splitext(f)
-		if fn.endswith('runme'):
-			execf=f
-			break
-	if not execf:
-		dprint(0, 'no exec', test)
-		return None, None, None
-	pocmd=[]
-	pocmd.append(os.path.join('.',execf))
-	pocmd.extend(args)
-	dprint(2, 'run_test_exec', execdir, pocmd)
-	proc=subprocess.Popen(pocmd, stderr=subprocess.PIPE, stdout=subprocess.PIPE)
-	(out,err)=proc.communicate()
-	ret=proc.returncode
-	os.chdir(backto)
-	return ret, out, err
+    """Run a test at rd/test"""
+    execdir = os.path.join(rd, test)
+    backto = os.getcwd()
+    os.chdir(execdir)
+    execf = None
+    for f in os.listdir(execdir):
+        fn, fx = os.path.splitext(f)
+        if fn.endswith('runme'):
+            execf = f
+            break
+    if not execf:
+        dprint(0, 'no exec', test)
+        return None, None, None
+    pocmd = []
+    pocmd.append(os.path.join('.', execf))
+    pocmd.extend(args)
+    dprint(2, 'run_test_exec', execdir, pocmd)
+    proc = subprocess.Popen(pocmd, stderr=subprocess.PIPE,
+                            stdout=subprocess.PIPE)
+    (out, err) = proc.communicate()
+    ret = proc.returncode
+    os.chdir(backto)
+    return ret, out, err
 ################
 
 # TODO arg parsing here
@@ -193,38 +194,36 @@ def run_test(rd, test, args):
 # . a oneshot "just run one test" mode
 
 
-slist=getstrategy('team1/demo')
+slist = getstrategy('team1/demo')
 
 # This should sort by pri but preserve order otherwise
 slist.sort(key=lambda tup: tup[0])
 
-tmpdir=tempfile.mkdtemp(prefix='testrunner-')
-dprint(2,'running in',tmpdir)
+tmpdir = tempfile.mkdtemp(prefix='testrunner-')
+dprint(2, 'running in', tmpdir)
 
 for test in tests_in(slist):
-	get_test(tmpdir, test)
+    get_test(tmpdir, test)
 
 # This is unique per RFC4122
-resultid=uuid.uuid1().hex
+resultid = uuid.uuid1().hex
 print "Running testrunner job", resultid
-outfn=os.path.join(tmpdir,'testrunner-'+resultid+'.result')
-FH=open(outfn, 'w')
+outfn = os.path.join(tmpdir, 'testrunner-'+resultid+'.result')
+FH = open(outfn, 'w')
 
 for pri, test, args in slist:
-	now=int(time.mktime(time.gmtime()))
-	msg='#TR#{} {} {}\n'.format(now, 'START', (test, args))
-	dprint(2, msg)
-	FH.write(msg)
-	res, stdo, stde = run_test(tmpdir, test, args)
-	now=int(time.mktime(time.gmtime()))
-	msg='#TR#{} {} {}\n'.format(now, 'RES:'+str(res), (test, args))
-	dprint(2, msg)
-	FH.write(msg)
-	#TODO print stdout stderr
+    now = int(time.mktime(time.gmtime()))
+    msg = '#TR#{} {} {}\n'.format(now, 'START', (test, args))
+    dprint(2, msg)
+    FH.write(msg)
+    res, stdo, stde = run_test(tmpdir, test, args)
+    now = int(time.mktime(time.gmtime()))
+    msg = '#TR#{} {} {}\n'.format(now, 'RES:'+str(res), (test, args))
+    dprint(2, msg)
+    FH.write(msg)
+    #TODO print stdout stderr
 
 FH.close()
 
 #TODO submit results to trserver
 #TODO clean up tmpdir
-
-
