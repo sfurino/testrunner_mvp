@@ -5,12 +5,13 @@
 # Print status on stdout
 
 
-EXIT=0
+RPMLIST=""
 while read pkg
 do
 	echo $pkg | grep -q ^# && continue
 	[ -z "$pkg" ] && continue
-	rpm -q $pkg || EXIT=1
+	RPMLIST="$RPMLIST $pkg"
 done < ./rpmlist
 
-exit $EXIT
+rpm -q $RPMLIST 
+exit $?
