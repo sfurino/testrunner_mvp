@@ -18,12 +18,12 @@ import uuid
 import time
 import subprocess
 
-#temp for testing.  get from args
+# temp for testing.  get from args
 VERBOSITY = 2
 
 
 ################
-#CONFIG
+# CONFIG
 trserver = 'http://localhost:8400'
 ################
 
