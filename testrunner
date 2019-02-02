@@ -20,7 +20,7 @@ import argparse
 import string
 import random
 import shutil
-
+import sys
 
 def dprint(v, *s):
     if v <= args.verbose:
@@ -139,6 +139,10 @@ def get_test(rootdir, tname):
             dprint(3, 'get_test retrieve', srcu, dstf, mode)
             if trgeturl(srcu, dstf):
                 os.chmod(dstf, intmode)
+            else:
+                return False
+
+    return True
 
 
 def run_test(rd, test, targs):
@@ -232,7 +236,9 @@ tmpdir = tempfile.mkdtemp(prefix='testrunner-')
 dprint(2, 'running in', tmpdir)
 
 for test in tests_in(slist):
-    get_test(tmpdir, test)
+    if not get_test(tmpdir, test):
+        print "ABORT! cannot get", test
+        sys.exit(1)
 
 # This is unique per RFC4122
 resultid = uuid.uuid1().hex
@@ -266,5 +272,9 @@ if trupresult(outfn):
     # We have cleanly uploaded our results.
     # TODO arg to not clean up
     shutil.rmtree(tmpdir)
+    sys.exit(0)
+else:
+    print "Failed to upload results, leaving in", tmpdir
+    sys.exit(6)
 
 #fin
