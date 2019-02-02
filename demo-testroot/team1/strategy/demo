@@ -15,9 +15,11 @@ test team2/pytest
 # This test is more than one file
 test team1/payloadtest
 
+# Team2 is testing stdout, but we'll test stderr
+test team1/stderr
 
 # Tests can also specify priority.  Default is 50
 # They also can take arguments.
-test pri=20 team2/sleep 10
+test pri=20 team2/sleep 2
 
 
