@@ -37,41 +37,29 @@ def dprint(v, *s):
         print pfx, s
 
 
-def geturl_f(url, outf):
+def trgeturl(url, outf):
     """Retrieve URL and store to file"""
-    dprint(4, 'geturl_f', url, outf)
+    dprint(4, 'trgeturl', url, outf)
     try:
         urlh = urllib2.urlopen(url)
-        with open(outf, 'wb') as f:
-            f.write(urlh.read())
-        result = True
+        if outf == 'lines':
+            result = []
+            urlh = urllib2.urlopen(url)
+            for line in urlh.readlines():
+                ln = line.strip()
+                if ln.startswith('#') or not ln:
+                    continue
+                result.append(ln)
+        else:
+            result = False
+            with open(outf, 'wb') as f:
+                f.write(urlh.read())
+            result = True
     except urllib2.HTTPError, e:
-        dprint(3, 'geturl_s HTTP error', e.code, url)
+        dprint(3, 'trgeturl HTTP error', e.code, url)
         result = False
     except urllib2.URLError, e:
-        dprint(3, 'geturl_s URL error', e.reason, url)
-        result = False
-
-    return result
-
-
-def geturl_s(url):
-    """Retrieve URL, return contents as list of lines
-       Comment lines and blanks excluded"""
-    dprint(4, 'geturl_s', url)
-    try:
-        result = []
-        urlh = urllib2.urlopen(url)
-        for line in urlh.readlines():
-            ln = line.strip()
-            if ln.startswith('#') or not ln:
-                continue
-            result.append(ln)
-    except urllib2.HTTPError, e:
-        dprint(3, 'geturl_s HTTP error', e.code, url)
-        result = False
-    except urllib2.URLError, e:
-        dprint(3, 'geturl_s URL error', e.reason, url)
+        dprint(3, 'trgeturl URL error', e.reason, url)
         result = False
 
     return result
@@ -97,7 +85,7 @@ def getstrategy(stname, visited=None, retval=None):
 
     sto, sts = stname.split('/')
     surl = os.path.join(trserver, sto, 'strategy', sts)
-    outp = geturl_s(surl)
+    outp = trgeturl(surl, 'lines')
     if not outp:
         dprint(0, 'failed strategy', stname)
         # resilient but dangerous; keeps going
@@ -137,7 +125,7 @@ def get_test(rootdir, tname):
     tbaseurl = os.path.join(trserver, to, 'tests', ts)
     tidxurl = os.path.join(tbaseurl, '.tr.idx')
     tlocaldr = os.path.join(rootdir, to, ts)
-    outp = geturl_s(tidxurl)
+    outp = trgeturl(tidxurl, 'lines')
     if not outp:
         dprint(0,  'failed get test', tname)
         return False
@@ -154,7 +142,7 @@ def get_test(rootdir, tname):
             dstf = os.path.join(tlocaldr, name)
             intmode = int(mode, 8)
             dprint(3, 'get_test retrieve', srcu, dstf, mode)
-            if geturl_f(srcu, dstf):
+            if trgeturl(srcu, dstf):
                 os.chmod(dstf, intmode)
 
 
