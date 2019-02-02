@@ -17,6 +17,9 @@ import time
 import subprocess
 import urllib2
 import argparse
+import string
+import random
+import shutil
 
 
 def dprint(v, *s):
@@ -151,6 +154,7 @@ def run_test(rd, test, targs):
             break
     if not execf:
         dprint(0, 'no exec', test)
+        os.chdir(backto)
         return None, None, None
     pocmd = []
     pocmd.append(os.path.join('.', execf))
@@ -162,25 +166,60 @@ def run_test(rd, test, targs):
     ret = proc.returncode
     os.chdir(backto)
     return ret, out, err
+
+
+def trupresult(rf):
+    """Upload the resultfile to the resultserver"""
+    bn = os.path.basename(rf)
+    an = string.digits + string.ascii_letters
+    boundary = ''.join(random.choice(an) for i in range(30))
+    lines = []
+    lines.append('--{}\r\n'.format(boundary))
+    cd = 'Content-Disposition: form-data; name="file";'
+    cd += ' filename="{}"\r\n'.format(bn)
+    lines.append(cd)
+    lines.append('Content-Type: application/octet-stream\r\n')
+    lines.append('\r\n')
+    with open(rf, 'r') as f:
+        lines.append(f.read())
+    lines.append('\r\n')
+    lines.append('--{}\r\n'.format(boundary))
+    lines.append('\r\n')
+    body = ''.join(lines)
+    headers = {
+        'Content-Type': 'multipart/form-data; boundary={}'.format(boundary),
+        'Content-Length': str(len(body))}
+    request = urllib2.Request(args.resultserver, data=body, headers=headers)
+    try:
+        result = True
+        urllib2.urlopen(request)
+        # note - my demoserver doesn't error on file already here.
+        # I hope a real server does!
+    except urllib2.HTTPError, e:
+        dprint(3, 'trupresult HTTP error', e.code, args.resultserver)
+        result = False
+    except urllib2.URLError, e:
+        dprint(3, 'trupresult URL error', e.reason, args.resultserver)
+        result = False
+
+    return result
+
+
 ################
 
-# TODO arg parsing here
-# the positional args are all strategy names
-# the only options should be:
-# . changing trserver from default
+# TODO args/behavior
 # . dry-run (don't run tests)
 # . drier-run (don't even dl tests)
-# . changing result submit location / method
 # . a oneshot "just run one test" mode
 parser = argparse.ArgumentParser()
 parser.add_argument("--verbose", "-v", action="count",
-                help="increase verbosity")
+                    help="increase verbosity")
 parser.add_argument("--trserver", "-t", default='http://localhost:8400',
-                help="specify trserver")
+                    help="specify trserver")
 parser.add_argument("--resultserver", "-r", default='http://localhost:8401',
-                help="specify resultserver")
+                    help="specify resultserver")
 parser.add_argument("--strategy", "-s", default='team1/demo',
-                help="use strategy")
+                    help="use strategy")
 args = parser.parse_args()
 resultserver = args.trserver
 
@@ -215,5 +254,9 @@ for pri, test, targs in slist:
 
 FH.close()
 
-#TODO submit results to trserver
-#TODO clean up tmpdir
+if trupresult(outfn):
+    # We have cleanly uploaded our results.
+    # TODO arg to not clean up
+    shutil.rmtree(tmpdir)
+
+#fin
