@@ -247,6 +247,14 @@ for pri, test, targs in slist:
     FH.write(msg)
     res, stdo, stde = run_test(tmpdir, test, targs)
     now = int(time.mktime(time.gmtime()))
+    if stdo:
+        FH.write('#TR#{} {} {}\n'.format(now, 'STDOUT', (test, targs)))
+        FH.write(stdo)
+        FH.write('#TR#EOF\n')
+    if stde:
+        FH.write('#TR#{} {} {}\n'.format(now, 'STDERR', (test, targs)))
+        FH.write(stde)
+        FH.write('#TR#EOF\n')
     msg = '#TR#{} {} {}\n'.format(now, 'RES:'+str(res), (test, targs))
     dprint(2, msg)
     FH.write(msg)
