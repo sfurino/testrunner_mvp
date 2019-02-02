@@ -10,8 +10,6 @@
 # against system python from a 'minimal install' of rhel7
 # Thus python3 and requests aren't available.  Le sigh.
 
-import pycurl
-from StringIO import StringIO
 import os
 import tempfile
 import uuid
@@ -43,16 +41,16 @@ def geturl_f(url, outf):
     """Retrieve URL and store to file"""
     dprint(4, 'geturl_f', url, outf)
     try:
-        urlh=urllib2.urlopen(url)
+        urlh = urllib2.urlopen(url)
         with open(outf, 'wb') as f:
             f.write(urlh.read())
-        result=True
+        result = True
     except urllib2.HTTPError, e:
         dprint(3, 'geturl_s HTTP error', e.code, url)
-        result=False
+        result = False
     except urllib2.URLError, e:
         dprint(3, 'geturl_s URL error', e.reason, url)
-        result=False
+        result = False
 
     return result
 
@@ -62,8 +60,8 @@ def geturl_s(url):
        Comment lines and blanks excluded"""
     dprint(4, 'geturl_s', url)
     try:
-        result=[]
-        urlh=urllib2.urlopen(url)
+        result = []
+        urlh = urllib2.urlopen(url)
         for line in urlh.readlines():
             ln = line.strip()
             if ln.startswith('#') or not ln:
@@ -71,12 +69,13 @@ def geturl_s(url):
             result.append(ln)
     except urllib2.HTTPError, e:
         dprint(3, 'geturl_s HTTP error', e.code, url)
-        result=False
+        result = False
     except urllib2.URLError, e:
         dprint(3, 'geturl_s URL error', e.reason, url)
-        result=False
+        result = False
 
     return result
+
 
 def getstrategy(stname, visited=None, retval=None):
     """Get a strategy.
