@@ -16,11 +16,9 @@ The last constraint is the reason we didn't use modern things like python3, requ
 ## Using testrunner
 
 
-You will need some ingredients to make a tasty soup.
+You will need some ingredients to make a tasty soup.  This repo *does* contain demo ingredients, but you should not use them beyond getting an idea of what testrunner can do.  
 
-This repo *does* contain demo ingredients, but you should not use them beyond getting an idea of what testrunner can do.  
-
-Think of them like the plastic turkey on the table at your local furniture store.
+The demo ingredients are like the plastic turkey on the table at your local furniture store.
 
 The three ingredients are:
 
