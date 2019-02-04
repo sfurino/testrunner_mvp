@@ -107,10 +107,11 @@ def getstrategy(stname, visited=None, retval=None):
 
 def tests_in(strategy):
     """Return a list of tests from a strategy list"""
-    retval = set()
+    retval = []
     for pri, test, args in strategy:
-        retval.add(test)
-    return list(retval)
+        if test not in retval:
+            retval.append(test)
+    return retval
 
 
 def get_test(rootdir, tname):
