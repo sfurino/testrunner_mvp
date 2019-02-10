@@ -177,6 +177,13 @@ def run_test(rd, test, targs):
     pocmd.append(os.path.join('.', execf))
     pocmd.extend(targs)
     dprint(2, 'run_test_exec', execdir, pocmd)
+    # TODO: stop using subprocess.PIPE / have run_test take a
+    # pair of fds (pointing to a tempfile) and let the
+    # caller deal.  
+    #  why?  communicate with pipes has a fixed buffer.
+    #  this will hang forever if it fills.
+    #  While a test writing more than 64k is not a nice test,
+    #  better to truncate output and print a nastygram than hang
     proc = subprocess.Popen(pocmd, stderr=subprocess.PIPE,
                             stdout=subprocess.PIPE)
     (out, err) = proc.communicate()
